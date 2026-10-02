@@ -33,17 +33,21 @@ jobs:
       - name: Initialize Readable Security Report
         shell: bash
         run: |
-          echo "==========================================================" > origin_ip_report.txt
-          echo "           CLOUD DISCOVERY INFRASTRUCTURE REPORT         " >> origin_ip_report.txt
-          echo "           Generated: $(date -u)" >> origin_ip_report.txt
-          echo "==========================================================" >> origin_ip_report.txt
-          echo "" >> origin_ip_report.txt
+          REPORT_FILE="$GITHUB_WORKSPACE/origin_ip_report.txt"
+          echo "==========================================================" > "$REPORT_FILE"
+          echo "           CLOUD DISCOVERY INFRASTRUCTURE REPORT         " >> "$REPORT_FILE"
+          echo "           Generated: $(date -u)" >> "$REPORT_FILE"
+          echo "==========================================================" >> "$REPORT_FILE"
+          echo "" >> "$REPORT_FILE"
 
       - name: Loop and Scan Domains From File
         shell: bash
         run: |
           set -e
-          if [ ! -f "$GITHUB_WORKSPACE/domains.txt" ]; then
+          REPORT_FILE="$GITHUB_WORKSPACE/origin_ip_report.txt"
+          DOMAINS_FILE="$GITHUB_WORKSPACE/domains.txt"
+          
+          if [ ! -f "$DOMAINS_FILE" ]; then
             echo "domains.txt not found in repository root" >&2
             exit 1
           fi
@@ -57,28 +61,31 @@ jobs:
             [ -n "$domain" ] || continue
 
             echo "Processing scan for target: $domain..."
-            echo "----------------------------------------------------------" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "TARGET DOMAIN: $domain" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "Analysis Status: Active Scanning Completed" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "----------------------------------------------------------" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "Potential Backend / Misconfigured Origin IPs Discovered:" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "----------------------------------------------------------" >> "$REPORT_FILE"
+            echo "TARGET DOMAIN: $domain" >> "$REPORT_FILE"
+            echo "Analysis Status: Active Scanning Completed" >> "$REPORT_FILE"
+            echo "----------------------------------------------------------" >> "$REPORT_FILE"
+            echo "Potential Backend / Misconfigured Origin IPs Discovered:" >> "$REPORT_FILE"
+            echo "" >> "$REPORT_FILE"
 
             python3 cloudrip.py "$domain" -t 40 -o temp_out.txt -f normal
 
             if [ -f temp_out.txt ] && [ -s temp_out.txt ]; then
-              cat temp_out.txt >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+              cat temp_out.txt >> "$REPORT_FILE"
             else
-              echo "  [INFO] No leaked backend origin IPs detected for this target." >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+              echo "  [INFO] No leaked backend origin IPs detected for this target." >> "$REPORT_FILE"
             fi
 
-            echo "" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
-            echo "==========================================================" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "" >> "$REPORT_FILE"
+            echo "==========================================================" >> "$REPORT_FILE"
             rm -f temp_out.txt
-          done < "$GITHUB_WORKSPACE/domains.txt"
+          done < "$DOMAINS_FILE"
+          
+          echo "Report file size: $(wc -c < "$REPORT_FILE") bytes"
 
       - name: Upload Downloadable Security Report
         uses: actions/upload-artifact@v4
         with:
           name: Business-Security-Origin-Report
           path: origin_ip_report.txt
+          if-no-files-found: error
