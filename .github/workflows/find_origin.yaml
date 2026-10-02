@@ -55,7 +55,19 @@ jobs:
           cd "$GITHUB_WORKSPACE/cloudrip_engine"
 
           while IFS= read -r line || [ -n "$line" ]; do
-            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            # Handle section headers (comments starting with #)
+            if [[ "$line" =~ ^# ]]; then
+              echo "" >> "$REPORT_FILE"
+              echo "=========================================================" >> "$REPORT_FILE"
+              echo "$line" >> "$REPORT_FILE"
+              echo "=========================================================" >> "$REPORT_FILE"
+              echo "" >> "$REPORT_FILE"
+              echo "Processing section: $line"
+              continue
+            fi
+
+            # Skip empty lines
+            [[ -z "$line" ]] && continue
 
             domain=$(echo "$line" | sed -e 's|^[^/]*//||' -e 's|^www\.||' -e 's|/.*||' -e 's|[[:space:]]||g')
             [ -n "$domain" ] || continue
@@ -79,6 +91,7 @@ jobs:
             echo "" >> "$REPORT_FILE"
             echo "==========================================================" >> "$REPORT_FILE"
             rm -f temp_out.txt
+
           done < "$DOMAINS_FILE"
           
           echo "Report file size: $(wc -c < "$REPORT_FILE") bytes"
