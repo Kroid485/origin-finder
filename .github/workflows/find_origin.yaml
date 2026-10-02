@@ -8,62 +8,77 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Clone CloudRip & Install Dependencies
-      run: |
-        git clone https://github.com cloudrip_engine
-        cd cloudrip_engine
-        pip install -r requirements.txt
-
-    - name: Initialize Readable Security Report
-      run: |
-        echo "==========================================================" > origin_ip_report.txt
-        echo "           CLOUD DISCOVERY INFRASTRUCTURE REPORT         " >> origin_ip_report.txt
-        echo "           Generated: $(date -u)" >> origin_ip_report.txt
-        echo "==========================================================" >> origin_ip_report.txt
-        echo "" >> origin_ip_report.txt
-
-    - name: Loop and Scan Domains From File
-      run: |
-        cd cloudrip_engine
-        
-        while IFS= read -r line || [ -n "$line" ]; do
-          [[ -z "$line" || "$line" =~ ^# ]] && continue
-          
-          # Clean domain: strips out https://, http://, www., and trailing slashes
-          domain=$(echo "$line" | sed -e 's|^[^/]*//||' -e 's|^www\.||' -e 's|/.*||' -e 's|[[:space:]]||g')
-          
-          echo "Processing scan for target: $domain..."
-          echo "----------------------------------------------------------" >> ../origin_ip_report.txt
-          echo "TARGET DOMAIN: $domain" >> ../origin_ip_report.txt
-          echo "Analysis Status: Active Scanning Completed" >> ../origin_ip_report.txt
-          echo "----------------------------------------------------------" >> ../origin_ip_report.txt
-          echo "Potential Backend / Misconfigured Origin IPs Discovered:" >> ../origin_ip_report.txt
-          echo "" >> ../origin_ip_report.txt
-          
-          python3 cloudrip.py "$domain" -t 40 -o temp_out.txt -f normal
-          
-          if [ -f temp_out.txt ] && [ -s temp_out.txt ]; then
-            cat temp_out.txt >> ../origin_ip_report.txt
+      - name: Clone CloudRip & Install Dependencies
+        shell: bash
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/moscovium-mc/CloudRip.git cloudrip_engine
+          cd cloudrip_engine
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
           else
-            echo "  [INFO] No leaked backend origin IPs detected for this target." >> ../origin_ip_report.txt
+            echo "requirements.txt not found in CloudRip repo" >&2
+            exit 1
           fi
-          
-          echo "" >> ../origin_ip_report.txt
-          echo "==========================================================" >> ../origin_ip_report.txt
-          rm -f temp_out.txt
-          
-        done < ../domains.txt
 
-    - name: Upload Downloadable Security Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: Business-Security-Origin-Report
-        path: origin_ip_report.txt
+      - name: Initialize Readable Security Report
+        shell: bash
+        run: |
+          echo "==========================================================" > origin_ip_report.txt
+          echo "           CLOUD DISCOVERY INFRASTRUCTURE REPORT         " >> origin_ip_report.txt
+          echo "           Generated: $(date -u)" >> origin_ip_report.txt
+          echo "==========================================================" >> origin_ip_report.txt
+          echo "" >> origin_ip_report.txt
+
+      - name: Loop and Scan Domains From File
+        shell: bash
+        run: |
+          set -e
+          if [ ! -f "$GITHUB_WORKSPACE/domains.txt" ]; then
+            echo "domains.txt not found in repository root" >&2
+            exit 1
+          fi
+
+          cd "$GITHUB_WORKSPACE/cloudrip_engine"
+
+          while IFS= read -r line || [ -n "$line" ]; do
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+
+            domain=$(echo "$line" | sed -e 's|^[^/]*//||' -e 's|^www\.||' -e 's|/.*||' -e 's|[[:space:]]||g')
+            [ -n "$domain" ] || continue
+
+            echo "Processing scan for target: $domain..."
+            echo "----------------------------------------------------------" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "TARGET DOMAIN: $domain" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "Analysis Status: Active Scanning Completed" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "----------------------------------------------------------" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "Potential Backend / Misconfigured Origin IPs Discovered:" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+
+            python3 cloudrip.py "$domain" -t 40 -o temp_out.txt -f normal
+
+            if [ -f temp_out.txt ] && [ -s temp_out.txt ]; then
+              cat temp_out.txt >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            else
+              echo "  [INFO] No leaked backend origin IPs detected for this target." >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            fi
+
+            echo "" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            echo "==========================================================" >> "$GITHUB_WORKSPACE/origin_ip_report.txt"
+            rm -f temp_out.txt
+          done < "$GITHUB_WORKSPACE/domains.txt"
+
+      - name: Upload Downloadable Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Business-Security-Origin-Report
+          path: origin_ip_report.txt
