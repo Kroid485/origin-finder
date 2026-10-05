@@ -83,7 +83,22 @@ jobs:
             python3 cloudrip.py "$domain" -t 40 -o temp_out.txt -f normal
 
             if [ -f temp_out.txt ] && [ -s temp_out.txt ]; then
-              cat temp_out.txt >> "$REPORT_FILE"
+              # Filter out [NOT FOUND] domains from the report while keeping actual findings.
+              grep -v '^\[NOT FOUND\]' temp_out.txt | awk '
+                BEGIN { section = 0 }
+                /^\[FOUND\]/ { section = 1; print; next }
+                /^\[CLOUDFLARE\]/ { section = 1; print; next }
+                /^\[NOT FOUND\]/ { section = 0; next }
+                section { print }
+              ' > temp_out_filtered.txt
+
+              if [ -s temp_out_filtered.txt ]; then
+                cat temp_out_filtered.txt >> "$REPORT_FILE"
+              else
+                echo "  [INFO] No actionable leaked backend origin IPs detected for this target." >> "$REPORT_FILE"
+              fi
+
+              rm -f temp_out_filtered.txt
             else
               echo "  [INFO] No leaked backend origin IPs detected for this target." >> "$REPORT_FILE"
             fi
