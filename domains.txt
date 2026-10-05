@@ -1,5 +1,11 @@
-# Defillama Cross-Chain Bridges 
-stargate.finance
+# Cross-Chain & Non Cross-Chain Bridges
+1inch.io
 across.to
-mayaprotocol.com
-symbiosis.finance
+asterdex.com
+axelar.network
+bitget.com
+celer.network
+chainflip.io
+circle.com
+debridge.finance
+dexalot.com
