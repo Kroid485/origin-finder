@@ -1,11 +1,11 @@
 # Cross-Chain & Non Cross-Chain Bridges
-1inch.io
-across.to
-asterdex.com
-axelar.network
-bitget.com
-celer.network
-chainflip.io
-circle.com
-debridge.finance
-dexalot.com
+echo-protocol.xyz
+gas.zip
+gravitybridge.net
+grvt.io
+hyperlane.xyz
+layerzero.network
+li.fi
+mayaprotocol.com
+merlinchain.io
+meson.fi
