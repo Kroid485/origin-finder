@@ -1,11 +1,11 @@
 # Cross-Chain & Non Cross-Chain Bridges
-mezo.org
-okx.com
-orbitchain.io
-orderly.network
-paradex.trade
-poly.network
-pumpbtc.xyz
-relay.link
-rhino.fi
-ring.exchange
+sodax.com
+solflare.com
+sosovalue.com
+stargate.finance
+symbiosis.finance
+txflow.com
+tzbtc.io
+universal.xyz
+wanchain.org
+wrapped.com
