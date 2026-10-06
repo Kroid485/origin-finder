@@ -1,11 +1,11 @@
 # Cross-Chain & Non Cross-Chain Bridges
-echo-protocol.xyz
-gas.zip
-gravitybridge.net
-grvt.io
-hyperlane.xyz
-layerzero.network
-li.fi
-mayaprotocol.com
-merlinchain.io
-meson.fi
+mezo.org
+okx.com
+orbitchain.io
+orderly.network
+paradex.trade
+poly.network
+pumpbtc.xyz
+relay.link
+rhino.fi
+ring.exchange
