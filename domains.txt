@@ -1,11 +1,14 @@
-# Cross-Chain & Non Cross-Chain Bridges
-sodax.com
-solflare.com
-sosovalue.com
-stargate.finance
-symbiosis.finance
-txflow.com
-tzbtc.io
-universal.xyz
-wanchain.org
-wrapped.com
+# CoinGecko CEXs:
+bilaxi.com
+fameex.com
+imbx.io
+nbx.com
+
+#No KYC CEXs:
+blofin.com
+btcturk.com
+bydfi.com
+kcex.com
+toobit.com
+weex.com
+xt.com
